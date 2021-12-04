@@ -1,0 +1,149 @@
+-- [ Hiding basic hl2 hud, don't touch these ] --
+
+local hide = {
+    ["CHudHealth"] = true,
+    ["CHudBattery"] = true
+}
+
+hook.Add( "HUDShouldDraw", "HideHUD", function( name )
+    if ( hide[ name ] ) then
+        return false
+    end
+end )
+
+-- [ function for health and armor bar (auto scaling etc.) ] --
+
+local function hphud()
+	
+	local wX = ScrW() / 128 -- splits screen width on a 128 same segments (you can change that at what ever scale you want, just remember to update below)
+	local wY = ScrH() / 72 -- same there, but height on a 72 segments 
+	
+	local hpnow = LocalPlayer():Health() -- variables of health and armor needed to scaled hud
+	local hpmax = LocalPlayer():GetMaxHealth()
+	local armornow = LocalPlayer():Armor()
+	local armormax = LocalPlayer():GetMaxArmor()
+	
+	local g = 0
+		
+	if armornow > 100 then -- better armor scaling for sandbox; changing dvider for procentage scaling (e.g. mine hud has max 400 pixels, and this is my 100%; in math you can 1 is 100%, 0.5 is 50% etc. so you can dvide actual stat by max stat, and you get the %. Now by multiply 400 by 0.x (x mean any number between that is not full 0 and not full 1) and you get % of this 400 pixels also.)
+		
+		g = armornow / 255 -- actual armor dvided by the max amount of armor in gmod
+		
+	else
+		
+		g = armornow / armormax -- actual armor dvided by max armor amount set for player (e.g. in darkRP jobs)
+		
+	end
+	
+	local backgroundsqr = { -- table of point for surface library to draw a poly on a screen
+		{ x = wX * 6, y = ScrH() - wY * 4 },
+		{ x = wX * 3, y = ScrH() - wY * 12 },
+		{ x = wX * 35, y = ScrH() - wY * 12 },
+		{ x = wX * 38, y = ScrH() - wY * 4 },
+	}
+	
+	local hpsquare1 = { -- same thing like above, about the health polies
+		{ x = wX * 7.2, y = ScrH() - wY * 5 },
+		{ x = wX * 5, y = ScrH() - wY * 11 },
+		{ x = wX * 10, y = ScrH() - wY * 11 },
+		{ x = wX * 12.2, y = ScrH() - wY * 5 },
+	}
+	
+	local hpsquare2 = {
+		{ x = wX * 13.2, y = ScrH() - wY * 5 },
+		{ x = wX * 11, y = ScrH() - wY * 11 },
+		{ x = wX * 16, y = ScrH() - wY * 11 },
+		{ x = wX * 18.2, y = ScrH() - wY * 5 },
+	}
+	
+	local hpsquare3 = {
+		{ x = wX * 19.2, y = ScrH() - wY * 5 },
+		{ x = wX * 17, y = ScrH() - wY * 11 },
+		{ x = wX * 22, y = ScrH() - wY * 11 },
+		{ x = wX * 24.2, y = ScrH() - wY * 5 },
+	}
+	
+	local hpsquare4 = {
+		{ x = wX * 25.2, y = ScrH() - wY * 5 },
+		{ x = wX * 23, y = ScrH() - wY * 11 },
+		{ x = wX * 28, y = ScrH() - wY * 11 },
+		{ x = wX * 30.2, y = ScrH() - wY * 5 },
+	}
+	
+	local hpsquare5 = {
+		{ x = wX * 31.2, y = ScrH() - wY * 5 },
+		{ x = wX * 29, y = ScrH() - wY * 11 },
+		{ x = wX * 34, y = ScrH() - wY * 11 },
+		{ x = wX * 36.2, y = ScrH() - wY * 5 },
+	}
+	
+	surface.SetDrawColor( 15, 15, 15, 105 ) -- check: "https://wiki.facepunch.com/gmod/surface" for surface library explanation
+	draw.NoTexture() -- draw library function avoiding some visual bugs
+	surface.DrawPoly( backgroundsqr )
+	
+	surface.SetDrawColor( 0, 150, 150, 255 )
+	surface.DrawRect( wX * 6, ScrH() - wY * 3, g * wX * 32, wY * 1 )
+	
+	surface.SetDrawColor( 255, 30, 0, 200 )
+	
+	if hpnow / hpmax >= 0.8 then -- health bar displacement function
+		surface.DrawPoly( hpsquare1 )
+		surface.DrawPoly( hpsquare2 )
+		surface.DrawPoly( hpsquare3 )
+		surface.DrawPoly( hpsquare4 )
+		surface.DrawPoly( hpsquare5 )
+	elseif hpnow / hpmax >= 0.6 and hpnow / hpmax < 0.8 then
+		surface.DrawPoly( hpsquare1 )
+		surface.DrawPoly( hpsquare2 )
+		surface.DrawPoly( hpsquare3 )
+		surface.DrawPoly( hpsquare4 )
+	elseif hpnow / hpmax >= 0.4 and hpnow / hpmax < 0.6 then
+		surface.DrawPoly( hpsquare1 )
+		surface.DrawPoly( hpsquare2 )
+		surface.DrawPoly( hpsquare3 )
+	elseif hpnow / hpmax >= 0.2 and hpnow / hpmax < 0.4 then
+		surface.DrawPoly( hpsquare1 )
+		surface.DrawPoly( hpsquare2 )
+	elseif hpnow / hpmax >= 0.01 and hpnow / hpmax < 0.2 then
+		surface.DrawPoly( hpsquare1 )
+	else
+		return
+	end
+	
+end
+
+-- [ actual hud painting functions ]--
+
+hook.Add("HUDPaint","P1EGHUD", function()
+
+	local j = 0
+	local i = 0
+
+	while GetConVar("simple_thirdperson_enabled"):GetBool() == false and i == 0 do -- while loop are refreshing script here, letting us to check that player is on a first or third person. Variables below and above are limiting loop from crashing game.
+		j = 1
+		i = 1
+		k = 0
+	end
+	
+	while GetConVar("simple_thirdperson_enabled"):GetBool() == true and k == 0 do
+		j = 0
+		i = 0
+		k = 1
+	end
+	
+	local ph1hud_mat = Material("egg/customs/ph1hud") -- variable/path to our .vmt file, for custom overlay in first person. If you want other imagine in this lace just change path and set up your vmt and vtf file. :)
+	
+	if j == 1 then -- player see in first person what is under this line.
+		surface.SetDrawColor( 255, 255, 255, 255 )
+		surface.SetMaterial( ph1hud_mat )
+		surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
+		hphud() -- calling function of health and armor bar
+	else -- anything that is under this line player see in third person mode
+		hphud()
+	end
+	
+end)
+
+-- if you want also a custom imagine for third person, then copy script above "else" also under this and change surface.SetMaterial( ph1hud_mat ) to whatever you want.
+
+-- and one important thing, in your vmt file, you shader must be "UnlitGeneric", not "VertexGeneric" or anything else, or you will have buggy imagine because of gmod trying to render shadows on it.
